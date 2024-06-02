@@ -1,0 +1,9 @@
+roboflow
+ultralytics==8.0.200
+ruamel.yaml
+wget
+scipy
+torch
+numpy
+matplotlib
+torchvision
