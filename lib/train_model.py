@@ -16,7 +16,14 @@ from .utils import (
 )
 
 
-def main(model_name):
+def main(
+    model_name,
+    max_combinations_train,
+    max_combinations_test,
+    split_ratio,
+    num_epochs,
+    lr,
+):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     if model_name == "inception":
@@ -37,21 +44,21 @@ def main(model_name):
     )
 
     data_dict_train, data_dict_test, data_dict_values_train, data_dict_values_test = (
-        split_and_process_data(0.8)
+        split_and_process_data(split_ratio)
     )
 
     train_dataset = CustomDataset(
         data_dict=data_dict_train,
         data_dict_values=data_dict_values_train,
         transform=transform,
-        max_combinations=2000,
+        max_combinations=max_combinations_train,
         split="train",
     )
     test_dataset = CustomDataset(
         data_dict=data_dict_test,
         data_dict_values=data_dict_values_test,
         transform=transform,
-        max_combinations=500,
+        max_combinations=max_combinations_test,
         split="test",
     )
 
@@ -59,9 +66,8 @@ def main(model_name):
     test_loader = DataLoader(test_dataset, batch_size=1)
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    num_epochs = 10  # Adjust number of epochs as needed
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -109,6 +115,35 @@ if __name__ == "__main__":
         choices=["clip", "inception"],
         help="The model type to use (clip or inception)",
     )
+    parser.add_argument(
+        "--max_combinations_train",
+        type=int,
+        default=2000,
+        help="Maximum combinations for training data",
+    )
+    parser.add_argument(
+        "--max_combinations_test",
+        type=int,
+        default=500,
+        help="Maximum combinations for test data",
+    )
+    parser.add_argument(
+        "--split_ratio", type=float, default=0.8, help="Train/test split ratio"
+    )
+    parser.add_argument(
+        "--num_epochs", type=int, default=10, help="Number of training epochs"
+    )
+    parser.add_argument(
+        "--lr", type=float, default=0.001, help="Learning rate for the optimizer"
+    )
+
     args = parser.parse_args()
 
-    main(args.model)
+    main(
+        args.model,
+        args.max_combinations_train,
+        args.max_combinations_test,
+        args.split_ratio,
+        args.num_epochs,
+        args.lr,
+    )
